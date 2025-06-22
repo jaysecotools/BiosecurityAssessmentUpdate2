@@ -2560,54 +2560,71 @@
         }
         
         function setupPhotoButtons(takeBtn, uploadBtn, input, preview, section) {
-            takeBtn.addEventListener('click', () => {
-                input.setAttribute('capture', 'environment');
-                input.click();
-            });
-            
-            uploadBtn.addEventListener('click', () => {
-                input.removeAttribute('capture');
-                input.click();
-            });
-            
-            input.addEventListener('change', function(e) {
-                const files = e.target.files;
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    if (file.type.match('image.*')) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const photoDiv = document.createElement('div');
-                            photoDiv.className = 'photo-preview';
-                            
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.alt = `${section} photo ${i + 1}`;
-                            
-                            const deleteBtn = document.createElement('button');
-                            deleteBtn.className = 'delete-photo';
-                            deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-                            deleteBtn.setAttribute('aria-label', `Delete ${section} photo ${i + 1}`);
-                            deleteBtn.addEventListener('click', () => {
-                                photoDiv.remove();
-                                savePhotosToLocalStorage(section);
-                                markAsChanged();
-                            });
-                            
-                            photoDiv.appendChild(img);
-                            photoDiv.appendChild(deleteBtn);
-                            preview.appendChild(photoDiv);
-                            
+    takeBtn.addEventListener('click', () => {
+        input.setAttribute('capture', 'environment');
+        input.click();
+    });
+    
+    uploadBtn.addEventListener('click', () => {
+        input.removeAttribute('capture');
+        input.click();
+    });
+    
+    input.addEventListener('change', function(e) {
+        const files = e.target.files;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (file.type.match('image.*')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Create an image element to process the photo
+                    const img = new Image();
+                    img.onload = function() {
+                        // Create a canvas to convert the image to a consistent format
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Draw the image to canvas (this strips any problematic metadata)
+                        ctx.drawImage(img, 0, 0);
+                        
+                        // Convert to JPEG (most compatible format for PDF)
+                        const processedImage = canvas.toDataURL('image/jpeg', 0.8); // 80% quality
+                        
+                        // Create the preview element
+                        const photoDiv = document.createElement('div');
+                        photoDiv.className = 'photo-preview';
+                        
+                        const previewImg = document.createElement('img');
+                        previewImg.src = processedImage;
+                        previewImg.alt = `${section} photo ${i + 1}`;
+                        
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-photo';
+                        deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                        deleteBtn.setAttribute('aria-label', `Delete ${section} photo ${i + 1}`);
+                        deleteBtn.addEventListener('click', () => {
+                            photoDiv.remove();
                             savePhotosToLocalStorage(section);
                             markAsChanged();
-                        }
-                        reader.readAsDataURL(file);
-                    }
+                        });
+                        
+                        photoDiv.appendChild(previewImg);
+                        photoDiv.appendChild(deleteBtn);
+                        preview.appendChild(photoDiv);
+                        
+                        savePhotosToLocalStorage(section);
+                        markAsChanged();
+                    };
+                    img.src = e.target.result;
                 }
-                // Reset input to allow selecting same file again
-                input.value = '';
-            });
+                reader.readAsDataURL(file);
+            }
         }
+        input.value = '';
+    });
+}
         
         function savePhotosToLocalStorage(section) {
             let previewId;
