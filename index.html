@@ -1989,8 +1989,9 @@
 
         // Initialize Leaflet map
         function initMap() {
-            // Default to Melbourne Australia 
-            map = L.map('map').setView([-37.8136, 144.9631], 10);
+    // Set to Burnie, Tasmania
+    map = L.map('map').setView([-41.0558, 145.9038], 10);
+        }
             
             // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
