@@ -2104,33 +2104,46 @@
         }
 
         // Navigation Functions
-        function showSection(index) {
-            sections.forEach((section, i) => {
-                const el = document.getElementById(section);
-                if (i === index) {
-                    el.classList.add('active');
-                    // Set focus to first focusable element for better keyboard navigation
-                    setTimeout(() => {
-                        const focusable = el.querySelector('input, select, textarea, button');
-                        if (focusable) focusable.focus();
-                    }, 100);
-                } else {
-                    el.classList.remove('active');
+function showSection(index) {
+    // Hide all sections first
+    sections.forEach((section, i) => {
+        const el = document.getElementById(section);
+        if (i === index) {
+            el.classList.add('active');
+            
+            // Set focus for accessibility
+            setTimeout(() => {
+                const focusable = el.querySelector('input, select, textarea, button');
+                if (focusable) focusable.focus();
+                
+                // SPECIAL CODE FOR RESULTS PAGE
+                if (section === 'results-section') {
+                    // Create the chart if it doesn't exist
+                    if (!radarChart) {
+                        initializeRadarChart();
+                    }
+                    // Always update it with current values
+                    updateRadarChart();
                 }
-            });
-            currentSection = index;
-            updateProgressBar();
-            
-            // Resize map when section becomes active
-            if (index === 0 && map) {
-                setTimeout(() => {
-                    map.invalidateSize();
-                }, 300);
-            }
-            
-            // Load photos for current section
-            loadPhotosFromLocalStorage();
+            }, 100);
+        } else {
+            el.classList.remove('active');
         }
+    });
+    
+    currentSection = index;
+    updateProgressBar();
+    
+    // Fix map sizing if we're on the first page
+    if (index === 0 && map) {
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 300);
+    }
+    
+    // Load any photos for this section
+    loadPhotosFromLocalStorage();
+}
 
         function nextSection(currentId, nextId) {
             if (validateSection(currentId)) {
